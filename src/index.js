@@ -5,37 +5,92 @@
  * Aggregates engineering management jobs from multiple job boards
  */
 
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { existsSync } from "fs";
+import { scrapeRemoteOKJobs } from "./scrapers/remoteok.js";
+import { scrapeAdzunaJobs } from "./scrapers/adzuna.js";
+import { logger } from "./utils/logger.js";
+import { filterNewJobs, markJobsAsSeen } from "./utils/storage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('Job Finder CLI');
-console.log('==============\n');
+console.log("Job Finder CLI");
+console.log("==============\n");
 
 // Check if preferences file exists
-const preferencesPath = join(__dirname, '..', '.local', 'preferences.js');
+const preferencesPath = join(__dirname, "..", ".local", "preferences.js");
 if (!existsSync(preferencesPath)) {
-  console.error('❌ Preferences file not found!');
-  console.error(`   Please create .local/preferences.js based on config/preferences.example.js\n`);
+  console.error("❌ Preferences file not found!");
+  console.error(
+    `   Please create .local/preferences.js based on config/preferences.example.js\n`,
+  );
   process.exit(1);
 }
 
-// Load preferences
-try {
-  const preferencesModule = await import(`file://${preferencesPath}`);
-  const preferences = preferencesModule.preferences;
-  console.log('✅ Preferences loaded\n');
-  
-  // TODO: Implement job scraping and filtering
-  console.log('🚧 Implementation in progress...\n');
-  console.log('Your preferences:', JSON.stringify(preferences, null, 2));
-  
-} catch (error) {
-  console.error('❌ Error loading preferences:', error.message);
-  process.exit(1);
+// Main function
+async function main() {
+  try {
+    // Load preferences
+    const preferencesModule = await import(`file://${preferencesPath}`);
+    const preferences = preferencesModule.preferences;
+    logger.success("Preferences loaded");
+
+    // Scrape jobs from multiple sources
+    logger.info("Starting job search...\n");
+
+    // Fetch jobs from all sources in parallel
+    const [remoteOKJobs, adzunaJobs] = await Promise.all([
+      scrapeRemoteOKJobs(),
+      scrapeAdzunaJobs({
+        what: preferences.search?.what || "software engineering manager",
+        whatExclude: preferences.search?.whatExclude || "",
+        where: "", // Leave empty for broader results, filter by location later
+      }),
+    ]);
+
+    // Combine all jobs
+    const allJobs = [...remoteOKJobs, ...adzunaJobs];
+
+    if (allJobs.length === 0) {
+      logger.warning("No jobs found");
+      return;
+    }
+
+    logger.success(
+      `Found ${allJobs.length} total jobs (RemoteOK: ${remoteOKJobs.length}, Adzuna: ${adzunaJobs.length})`,
+    );
+
+    // Filter out jobs we've already seen
+    const newJobs = await filterNewJobs(allJobs);
+    logger.info(
+      `${newJobs.length} new jobs (${allJobs.length - newJobs.length} already seen)\n`,
+    );
+
+    if (newJobs.length === 0) {
+      logger.info("No new jobs to display");
+      return;
+    }
+
+    // Display jobs (for now, show first 10)
+    const jobsToDisplay = newJobs.slice(0, 10);
+    logger.info(`Showing first ${jobsToDisplay.length} new jobs:\n`);
+
+    jobsToDisplay.forEach((job, index) => {
+      console.log(`\n${index + 1}. ${job.title}`);
+      logger.job(job);
+    });
+
+    // Mark these jobs as seen
+    await markJobsAsSeen(newJobs);
+    logger.success(`Marked ${newJobs.length} jobs as seen`);
+  } catch (error) {
+    logger.error(`Error: ${error.message}`);
+    console.error(error);
+    process.exit(1);
+  }
 }
 
+// Run the main function
+main();

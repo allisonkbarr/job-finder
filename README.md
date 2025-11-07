@@ -27,6 +27,15 @@ A Node.js command-line tool that aggregates jobs from multiple job boards and ap
    ```
    Then edit `.local/preferences.js` with your preferences.
 
+4. Set up API credentials (for Adzuna):
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` and add your Adzuna API credentials:
+   - Register at [https://developer.adzuna.com/](https://developer.adzuna.com/)
+   - Get your `app_id` and `app_key`
+   - Add them to your `.env` file
+
 ## Usage
 
 Run the job finder:
@@ -45,10 +54,13 @@ Edit `.local/preferences.js` to customize:
 
 ## Job Boards Supported
 
+Currently implemented:
+- ✅ RemoteOK (free, no API key required)
+- ✅ Adzuna (requires free API key)
+
+Planned:
 - LinkedIn Jobs
 - Indeed
-- GitHub Jobs
-- Stack Overflow Jobs
 - BuiltIn
 - Welcome to the Jungle
 
