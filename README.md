@@ -89,14 +89,7 @@ Edit `.local/preferences.js` to customize:
 Currently using:
 - ✅ **Adzuna** (requires free API key)
 
-Previously supported (removed for simplicity):
-- ~~RemoteOK~~
-- ~~LinkedIn Jobs~~
-- ~~Indeed~~
-- ~~BuiltIn~~
-- ~~GitHub Jobs~~
-- ~~Stack Overflow Jobs~~
-- ~~Welcome to the Jungle~~
+
 
 ## Example Output
 
