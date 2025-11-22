@@ -2,19 +2,17 @@
 
 /**
  * Job Finder CLI - Main Entry Point
- * Aggregates engineering management jobs from multiple job boards
+ * Aggregates engineering management jobs from job boards
  */
 
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { existsSync } from "fs";
-import { scrapeRemoteOKJobs } from "./scrapers/remoteok.js";
 import { scrapeAdzunaJobs } from "./scrapers/adzuna.js";
 import { logger } from "./utils/logger.js";
-import { filterNewJobs, markJobsAsSeen } from "./utils/storage.js";
 import { filterJobs } from "./filters/jobFilter.js";
 import {
-  filterByFreshness,
+  sortByFreshness,
   addFreshnessMetadata,
 } from "./filters/freshnessFilter.js";
 
@@ -42,72 +40,48 @@ async function main() {
     const preferences = preferencesModule.preferences;
     logger.success("Preferences loaded");
 
-    // Scrape jobs from multiple sources
+    // Scrape jobs from Adzuna
     logger.info("Starting job search...\n");
 
-    // Fetch jobs from all sources in parallel
-    // For Adzuna, use the first preferred location to get better initial results
-    const adzunaLocation = preferences.location?.preferred?.[0] || "";
-    const adzunaMaxDaysOld = preferences.freshness?.maxDaysOld || null;
+    const jobs = await scrapeAdzunaJobs({
+      what: preferences.search?.what || "engineering manager",
+      whatExclude: preferences.search?.whatExclude || "",
+      where: preferences.location?.preferred?.[0] || "",
+      maxDaysOld: preferences.freshness?.maxDaysOld || null,
+      resultsPerPage: 50,
+    });
 
-    const [remoteOKJobs, adzunaJobs] = await Promise.all([
-      scrapeRemoteOKJobs(),
-      scrapeAdzunaJobs({
-        what: preferences.search?.what || "engineering manager",
-        whatExclude: preferences.search?.whatExclude || "",
-        where: adzunaLocation, // Pass preferred location to get relevant results from API
-        maxDaysOld: adzunaMaxDaysOld, // Filter by freshness at API level
-        resultsPerPage: 50, // Get more results per page
-      }),
-    ]);
-
-    // Combine all jobs
-    const allJobs = [...remoteOKJobs, ...adzunaJobs];
-
-    if (allJobs.length === 0) {
+    if (jobs.length === 0) {
       logger.warning("No jobs found");
       return;
     }
 
-    logger.success(
-      `Found ${allJobs.length} total jobs (RemoteOK: ${remoteOKJobs.length}, Adzuna: ${adzunaJobs.length})`,
-    );
+    logger.success(`Found ${jobs.length} jobs from Adzuna`);
 
-    // // Apply preference-based filters
+    // Apply preference-based filters
     logger.info("Applying filters...");
-    let filteredJobs = filterJobs(allJobs, preferences);
+    let filteredJobs = filterJobs(jobs, preferences);
     logger.info(`${filteredJobs.length} jobs after filtering by preferences`);
 
-    // Apply freshness filter and sort
-    filteredJobs = filterByFreshness(filteredJobs, preferences);
-    logger.info(`${filteredJobs.length} jobs after freshness filter`);
+    // Sort by freshness (newest first)
+    filteredJobs = sortByFreshness(filteredJobs, preferences);
+    logger.info(`Jobs sorted by freshness\n`);
+
+    if (filteredJobs.length === 0) {
+      logger.info("No jobs matched your criteria");
+      return;
+    }
 
     // Add freshness metadata for display
     filteredJobs = addFreshnessMetadata(filteredJobs);
 
-    // Filter out jobs we've already seen
-    const newJobs = await filterNewJobs(filteredJobs);
-    logger.info(
-      `${newJobs.length} new jobs (${filteredJobs.length - newJobs.length} already seen)\n`,
-    );
+    // Display all matching jobs
+    logger.info(`Showing ${filteredJobs.length} matching jobs:\n`);
 
-    if (newJobs.length === 0) {
-      logger.info("No new jobs to display");
-      return;
-    }
-
-    // Display jobs (for now, show first 10)
-    const jobsToDisplay = newJobs.slice(0, 10);
-    logger.info(`Showing first ${jobsToDisplay.length} new jobs:\n`);
-
-    jobsToDisplay.forEach((job, index) => {
+    filteredJobs.forEach((job, index) => {
       console.log(`\n${index + 1}. ${job.title}`);
       logger.job(job);
     });
-
-    // Mark these jobs as seen
-    await markJobsAsSeen(newJobs);
-    logger.success(`Marked ${newJobs.length} jobs as seen`);
   } catch (error) {
     logger.error(`Error: ${error.message}`);
     console.error(error);
