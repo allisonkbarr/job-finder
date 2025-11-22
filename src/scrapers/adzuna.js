@@ -42,6 +42,7 @@ export async function scrapeAdzunaJobs(searchParams = {}) {
     whatExclude = "",
     where = "",
     maxDaysOld = null,
+    sortBy = "date", // Sort by date (newest first) by default
     country = "us",
     resultsPerPage = 50,
     page = 1,
@@ -57,23 +58,14 @@ export async function scrapeAdzunaJobs(searchParams = {}) {
     const params = {
       app_id: ADZUNA_APP_ID,
       app_key: ADZUNA_APP_KEY,
+      what: what,
+      what_exclude: whatExclude,
+      where: where,
+      max_days_old: maxDaysOld,
+      sort_by: sortBy,
       results_per_page: resultsPerPage,
       "content-type": "application/json",
     };
-
-    // Add optional parameters
-    if (what) {
-      params.what = what;
-    }
-    if (whatExclude) {
-      params.what_exclude = whatExclude;
-    }
-    if (where) {
-      params.where = where;
-    }
-    if (maxDaysOld !== null) {
-      params.max_days_old = maxDaysOld;
-    }
 
     const response = await axios.get(url, { params });
 
