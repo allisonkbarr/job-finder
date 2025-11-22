@@ -43,24 +43,44 @@ async function main() {
     // Scrape jobs from Adzuna
     logger.info("Starting job search...\n");
 
-    const jobs = await scrapeAdzunaJobs({
-      what: preferences.search?.what || "engineering manager",
-      whatExclude: preferences.search?.whatExclude || "",
-      where: preferences.location?.where || "",
-      maxDaysOld: preferences.freshness?.maxDaysOld || null,
-      resultsPerPage: 50,
-    });
+    // Make two calls: one for local jobs, one for remote jobs
+    const [localJobs, remoteJobs] = await Promise.all([
+      // Call 1: Local jobs in preferred location
+      scrapeAdzunaJobs({
+        what: preferences.search?.what || "engineering manager",
+        whatExclude: preferences.search?.whatExclude || "",
+        where: preferences.location?.where || "",
+        maxDaysOld: preferences.freshness?.maxDaysOld || null,
+        resultsPerPage: 50,
+      }),
+      // Call 2: Remote jobs nationwide
+      scrapeAdzunaJobs({
+        what: `${preferences.search?.what || "engineering manager"} remote`,
+        whatExclude: preferences.search?.whatExclude || "",
+        where: "", // No location - search nationwide
+        maxDaysOld: preferences.freshness?.maxDaysOld || null,
+        resultsPerPage: 50,
+      }),
+    ]);
 
-    if (jobs.length === 0) {
+    // Combine results and deduplicate by job ID
+    const allJobs = [...localJobs, ...remoteJobs];
+    const uniqueJobs = Array.from(
+      new Map(allJobs.map((job) => [job.id, job])).values(),
+    );
+
+    if (uniqueJobs.length === 0) {
       logger.warning("No jobs found");
       return;
     }
 
-    logger.success(`Found ${jobs.length} jobs from Adzuna`);
+    logger.success(
+      `Found ${uniqueJobs.length} jobs from Adzuna (${localJobs.length} local, ${remoteJobs.length} remote, ${allJobs.length - uniqueJobs.length} duplicates removed)`,
+    );
 
     // Apply preference-based filters
     logger.info("Applying filters...");
-    let filteredJobs = filterJobs(jobs, preferences);
+    let filteredJobs = filterJobs(uniqueJobs, preferences);
     logger.info(`${filteredJobs.length} jobs after filtering by preferences`);
 
     // Sort by freshness (newest first)
