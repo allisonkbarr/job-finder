@@ -46,12 +46,18 @@ async function main() {
     logger.info("Starting job search...\n");
 
     // Fetch jobs from all sources in parallel
+    // For Adzuna, use the first preferred location to get better initial results
+    const adzunaLocation = preferences.location?.preferred?.[0] || "";
+    const adzunaMaxDaysOld = preferences.freshness?.maxDaysOld || null;
+
     const [remoteOKJobs, adzunaJobs] = await Promise.all([
       scrapeRemoteOKJobs(),
       scrapeAdzunaJobs({
-        what: preferences.search?.what || "",
+        what: preferences.search?.what || "engineering manager",
         whatExclude: preferences.search?.whatExclude || "",
-        where: "", // Leave empty for broader results, filter by location later
+        where: adzunaLocation, // Pass preferred location to get relevant results from API
+        maxDaysOld: adzunaMaxDaysOld, // Filter by freshness at API level
+        resultsPerPage: 50, // Get more results per page
       }),
     ]);
 

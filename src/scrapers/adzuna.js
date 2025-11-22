@@ -20,6 +20,7 @@ const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
  * @param {string} searchParams.what - Job title/keywords to search for
  * @param {string} searchParams.whatExclude - Keywords to exclude from search
  * @param {string} searchParams.where - Location to search in
+ * @param {number} searchParams.maxDaysOld - Maximum age of jobs in days
  * @param {string} searchParams.country - Country code (default: 'us')
  * @param {number} searchParams.resultsPerPage - Number of results per page (default: 50)
  * @param {number} searchParams.page - Page number (default: 1)
@@ -40,6 +41,7 @@ export async function scrapeAdzunaJobs(searchParams = {}) {
     what = "engineering manager",
     whatExclude = "",
     where = "",
+    maxDaysOld = null,
     country = "us",
     resultsPerPage = 50,
     page = 1,
@@ -68,6 +70,9 @@ export async function scrapeAdzunaJobs(searchParams = {}) {
     }
     if (where) {
       params.where = where;
+    }
+    if (maxDaysOld !== null) {
+      params.max_days_old = maxDaysOld;
     }
 
     const response = await axios.get(url, { params });
