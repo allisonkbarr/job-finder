@@ -12,6 +12,11 @@ import { scrapeRemoteOKJobs } from "./scrapers/remoteok.js";
 import { scrapeAdzunaJobs } from "./scrapers/adzuna.js";
 import { logger } from "./utils/logger.js";
 import { filterNewJobs, markJobsAsSeen } from "./utils/storage.js";
+import { filterJobs } from "./filters/jobFilter.js";
+import {
+  filterByFreshness,
+  addFreshnessMetadata,
+} from "./filters/freshnessFilter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,7 +49,7 @@ async function main() {
     const [remoteOKJobs, adzunaJobs] = await Promise.all([
       scrapeRemoteOKJobs(),
       scrapeAdzunaJobs({
-        what: preferences.search?.what || "software engineering manager",
+        what: preferences.search?.what || "",
         whatExclude: preferences.search?.whatExclude || "",
         where: "", // Leave empty for broader results, filter by location later
       }),
@@ -62,10 +67,22 @@ async function main() {
       `Found ${allJobs.length} total jobs (RemoteOK: ${remoteOKJobs.length}, Adzuna: ${adzunaJobs.length})`,
     );
 
+    // // Apply preference-based filters
+    logger.info("Applying filters...");
+    let filteredJobs = filterJobs(allJobs, preferences);
+    logger.info(`${filteredJobs.length} jobs after filtering by preferences`);
+
+    // Apply freshness filter and sort
+    filteredJobs = filterByFreshness(filteredJobs, preferences);
+    logger.info(`${filteredJobs.length} jobs after freshness filter`);
+
+    // Add freshness metadata for display
+    filteredJobs = addFreshnessMetadata(filteredJobs);
+
     // Filter out jobs we've already seen
-    const newJobs = await filterNewJobs(allJobs);
+    const newJobs = await filterNewJobs(filteredJobs);
     logger.info(
-      `${newJobs.length} new jobs (${allJobs.length - newJobs.length} already seen)\n`,
+      `${newJobs.length} new jobs (${filteredJobs.length - newJobs.length} already seen)\n`,
     );
 
     if (newJobs.length === 0) {

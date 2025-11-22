@@ -6,7 +6,7 @@
 export const preferences = {
   // Search terms for job boards (used by Adzuna and other scrapers)
   search: {
-    what: "software engineering manager", // Primary search term
+    what: "engineering manager", // Primary search term (use "engineering manager" for broader results than "software engineering manager")
     whatExclude:
       "electrical mechanical civil aerospace structural chemical biomedical nuclear", // Exclude traditional engineering
   },
