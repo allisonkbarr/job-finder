@@ -26,15 +26,7 @@ export function filterJobs(jobs, preferences) {
     filtered = filterOutExcludedRoles(filtered, preferences.excludeRoles);
   }
 
-  // Apply location filtering
-  if (
-    preferences.location?.preferred &&
-    preferences.location.preferred.length > 0
-  ) {
-    filtered = filterByLocation(filtered, preferences.location.preferred);
-  }
-
-  // Apply location type filtering
+  // Apply location type filtering (location filtering now done by Adzuna API)
   if (
     preferences.location?.locationTypes &&
     preferences.location.locationTypes.length > 0
@@ -88,52 +80,6 @@ function filterOutExcludedRoles(jobs, excludeRoles) {
     });
 
     return !hasExcludedRole;
-  });
-}
-
-/**
- * Filters jobs by location (matches if any preferred location is found)
- * @param {Array} jobs - Array of job objects
- * @param {Array<string>} preferredLocations - Preferred locations
- * @returns {Array} Filtered jobs
- */
-function filterByLocation(jobs, preferredLocations) {
-  return jobs.filter((job) => {
-    const location = job.location.toLowerCase();
-
-    // If location is "remote" or "anywhere", always include it
-    if (location.includes("remote") || location.includes("anywhere")) {
-      return true;
-    }
-
-    // Check if job location matches any preferred location
-    // Also check for county names (e.g., King County for Seattle area)
-    return preferredLocations.some((prefLoc) => {
-      const prefLocLower = prefLoc.toLowerCase();
-
-      // Direct match
-      if (location.includes(prefLocLower)) {
-        return true;
-      }
-
-      // Seattle area special handling - accept King County
-      const seattleAreaCities = [
-        "seattle",
-        "bellevue",
-        "redmond",
-        "kirkland",
-        "bothell",
-        "renton",
-      ];
-      if (
-        seattleAreaCities.includes(prefLocLower) &&
-        location.includes("king county")
-      ) {
-        return true;
-      }
-
-      return false;
-    });
   });
 }
 

@@ -35,16 +35,9 @@ export const preferences = {
 
   // Location preferences
   location: {
-    preferred: [
-      "Seattle",
-      "Bellevue",
-      "Redmond",
-      "Kirkland",
-      "Bothell",
-      "Renton",
-    ],
+    where: "Seattle, WA", // Location to search (e.g., "Seattle, WA", "King County", "San Francisco, CA")
     // Location type: 'in-person', 'hybrid', 'remote'
-    locationTypes: ["in-person", "hybrid"], // Exclude 'remote'
+    locationTypes: ["in-person", "hybrid", "remote"],
   },
 
   // Keywords to include/exclude in job descriptions

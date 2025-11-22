@@ -46,7 +46,7 @@ async function main() {
     const jobs = await scrapeAdzunaJobs({
       what: preferences.search?.what || "engineering manager",
       whatExclude: preferences.search?.whatExclude || "",
-      where: preferences.location?.preferred?.[0] || "",
+      where: preferences.location?.where || "",
       maxDaysOld: preferences.freshness?.maxDaysOld || null,
       resultsPerPage: 50,
     });
