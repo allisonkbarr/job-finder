@@ -8,7 +8,7 @@
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { existsSync } from "fs";
-import { scrapeAdzunaJobs } from "./scrapers/adzuna.js";
+import { scrapeAdzunaJobs } from "./sources/adzuna.js";
 import { logger } from "./utils/logger.js";
 import { filterJobs } from "./filters/jobFilter.js";
 import {

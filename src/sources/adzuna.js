@@ -1,5 +1,5 @@
 /**
- * Adzuna Jobs Scraper
+ * Adzuna Job Source
  * Fetches jobs from Adzuna's API
  * API Docs: https://developer.adzuna.com/
  */
@@ -15,7 +15,7 @@ const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID;
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
 
 /**
- * Scrapes jobs from Adzuna
+ * Fetches jobs from Adzuna
  * @param {Object} searchParams - Search parameters
  * @param {string} searchParams.what - Job title/keywords to search for
  * @param {string} searchParams.whatExclude - Keywords to exclude from search
