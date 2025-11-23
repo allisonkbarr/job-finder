@@ -16,11 +16,6 @@ export function filterJobs(jobs, preferences) {
 
   let filtered = jobs;
 
-  // Apply role level filtering
-  if (preferences.roleLevels && preferences.roleLevels.length > 0) {
-    filtered = filterByRoleLevel(filtered, preferences.roleLevels);
-  }
-
   // Apply role exclusion filtering
   if (preferences.excludeRoles && preferences.excludeRoles.length > 0) {
     filtered = filterOutExcludedRoles(filtered, preferences.excludeRoles);
@@ -43,24 +38,6 @@ export function filterJobs(jobs, preferences) {
   }
 
   return filtered;
-}
-
-/**
- * Filters jobs by role level (case-insensitive partial match)
- * @param {Array} jobs - Array of job objects
- * @param {Array<string>} roleLevels - Acceptable role levels
- * @returns {Array} Filtered jobs
- */
-function filterByRoleLevel(jobs, roleLevels) {
-  return jobs.filter((job) => {
-    const title = job.title.toLowerCase();
-
-    // Check if job title matches any of the preferred role levels
-    return roleLevels.some((role) => {
-      const roleLower = role.toLowerCase();
-      return title.includes(roleLower);
-    });
-  });
 }
 
 /**

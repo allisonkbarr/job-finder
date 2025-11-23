@@ -11,27 +11,14 @@ export const preferences = {
       "electrical mechanical civil aerospace structural chemical biomedical nuclear", // Exclude traditional engineering
   },
 
-  // Role levels to match (Engineering Manager, Senior EM, Director, etc.)
-  roleLevels: [
-    "Engineering Manager",
-    "Senior Engineering Manager",
-    "Director of Engineering",
-    "Head of Engineering",
-  ],
-
-  // Roles to exclude (IC roles)
+  // Roles to exclude (IC roles - use short keywords to catch variations)
   excludeRoles: [
-    "Staff Engineer",
-    "Principal Engineer",
+    "Staff",
+    "Principal",
     "Tech Lead",
     "Senior Software Engineer",
+    "Senior Engineer",
   ],
-
-  // Company stage preferences
-  companyStage: {
-    preferred: ["startup", "scaleup"],
-    maxCompanySize: 500, // Employees
-  },
 
   // Location preferences
   location: {
