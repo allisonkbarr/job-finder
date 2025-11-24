@@ -4,21 +4,15 @@
  */
 
 export const preferences = {
-  // Search terms for job boards (used by Adzuna and other scrapers)
+  // Search terms for job boards (used by Adzuna and other scrapers/integrations)
   search: {
-    what: "engineering manager", // Primary search term (use "engineering manager" for broader results than "software engineering manager")
+    what: "engineering manager", // Primary search term
     whatExclude:
-      "electrical mechanical civil aerospace structural chemical biomedical nuclear", // Exclude traditional engineering
+      "electrical mechanical civil aerospace structural chemical biomedical nuclear",
   },
 
-  // Roles to exclude (IC roles - use short keywords to catch variations)
-  excludeRoles: [
-    "Staff",
-    "Principal",
-    "Tech Lead",
-    "Senior Software Engineer",
-    "Senior Engineer",
-  ],
+  // Roles to exclude
+  excludeRoles: ["Staff", "Principal", "Tech Lead"],
 
   // Location preferences
   location: {
